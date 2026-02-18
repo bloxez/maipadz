@@ -1,17 +1,27 @@
 #!maicro
 #---
-# title: Clear Database
-# description: Terminate running jobs and wipe all tables and data.
+# title: Book Club Launchpad
+# emoji: 📚
+# description: End-to-end setup of a practical book club schema with starter data and a verification query.
 # difficulty: beginner
-# estimated_time: 1m
+# estimated_time: 8m
 # video: https://www.youtube.com/watch?v=dhi7l1kZi9Y
 # tags:
+#   - maipad
+#   - workbook
 #   - database
-#   - cleanup
+#   - graphql
+#   - starter
+# intent: learning
+# resources:
+#   - type: docs
+#     url: /help/reference/database/
+#     title: Database Reference
+#   - type: docs
+#     url: /help/reference/data-operations/
+#     title: Data Operations
 #---
-# Terminate jobs and clear all database tables
-#
-# The purpose of this script is to terminate any executing jobs and clear all tables and data from the database.
+# maipad-config: {"launch":"run","filename":"bookclub.maipad.gql"}
 
 ###> TERMINATE ALL RUNNING ASYNC JOBS (CRON?)
 #{
