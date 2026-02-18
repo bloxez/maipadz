@@ -1,39 +1,57 @@
 #!maicro
 #---
-# title: Book Club Launchpad
-# emoji: 📚
-# description: End-to-end setup of a practical book club schema with starter data and a verification query.
+# title: Clear Database
+# description: Terminate running jobs and wipe all tables and data.
 # difficulty: beginner
-# estimated_time: 8m
+# estimated_time: 1m
 # video: https://www.youtube.com/watch?v=dhi7l1kZi9Y
 # tags:
-#   - maipad
-#   - workbook
 #   - database
-#   - graphql
-#   - starter
-# intent: learning
-# resources:
-#   - type: docs
-#     url: /help/reference/database/
-#     title: Database Reference
-#   - type: docs
-#     url: /help/reference/data-operations/
-#     title: Data Operations
+#   - cleanup
 #---
-# maipad-config: {"launch":"run","filename":"bookclub.maipad.gql"}
-###> CLEAR EXISTING DATABASE STATE
-#{
-# ## Clean slate
-# This block calls the standard cleanup script so your demo always starts from a predictable baseline.
+# Terminate jobs and clear all database tables
 #
-# stepinto: DB_CLEAR.gql
+# The purpose of this script is to terminate any executing jobs and clear all tables and data from the database.
+
+###> TERMINATE ALL RUNNING ASYNC JOBS (CRON?)
+#{
+# ## Stop Background Jobs
+# Before dropping tables, we terminate any running async jobs to avoid
+# orphaned processes that reference deleted tables.
+#}
+mutation TerminateJobs {
+  DbTerminateJobs {
+    terminated_count
+    terminated_jobs {
+      id
+      description
+      status
+      event_name
+      source
+      chain_text
+      error
+    }
+  }
+}
+
+###> DELETE ALL TABLES AND DATA - ALSO DROPS ANY CYPHER GRAPHS WHEN POSTGRES IS ACTIVE AND CYPHER IS ENABLED
+#{
+# ## Full Reset
+# `DbFullReset` drops **every** user table, associated indexes, and Apache AGE
+# graphs (if Cypher is enabled). System tables are recreated on next `DbReload`.
 #}
 mutation ClearDatabase {
-  DbClearResult: DbExecute(path: "{{UserDataFolder}}/project/scripts/DB_CLEAR.gql") {
-    success
-    message
-  }
+  DbFullReset
+}
+
+###> RELOAD SCHEMA
+#{
+# ## Rebuild Schema
+# After clearing tables, `DbReload` rebuilds the GraphQL schema. Since all
+# user tables are gone, only system types remain until new tables are created.
+#}
+mutation ReloadSchema {
+  DbReload
 }
 
 ###> CREATE BOOK CLUB TABLES
