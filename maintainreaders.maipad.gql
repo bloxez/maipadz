@@ -1,0 +1,30 @@
+#!maicro
+#---
+# title: Maintain Readers
+# emoji: 👥
+# description: Open maintain-data for readers with practical defaults for day-to-day membership and profile operations.
+# difficulty: beginner
+# estimated_time: 2m
+# tags:
+#   - maipad
+#   - maintain-data
+#   - readers
+# intent: ops
+# resources:
+#   - type: docs
+#     url: /help/reference/data-operations/
+#     title: Data Operations
+#   - type: docs
+#     url: /help/reference/database/
+#     title: Database Reference
+#---
+# maipad-config: {launch:"maintain-data", filename:"maintainreaders.maipad.gql", columns:["id","username","name","membership_level","email"], sort:[{key:"id",asc:false}], page:1, items:15, filters:[]}
+query readers_maipad {
+  readers(page: { page: 1, items: 15 }, sort: [{ key: "id", asc: false }] ) {
+    id
+    username
+    name
+    membership_level
+    email
+  }
+}

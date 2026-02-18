@@ -1,0 +1,281 @@
+#!maicro
+#---
+# title: Book Club Launchpad
+# emoji: 📚
+# description: End-to-end setup of a practical book club schema with starter data and a verification query.
+# difficulty: beginner
+# estimated_time: 8m
+# video: https://www.youtube.com/watch?v=dhi7l1kZi9Y
+# tags:
+#   - maipad
+#   - workbook
+#   - database
+#   - graphql
+#   - starter
+# intent: learning
+# resources:
+#   - type: docs
+#     url: /help/reference/database/
+#     title: Database Reference
+#   - type: docs
+#     url: /help/reference/data-operations/
+#     title: Data Operations
+#---
+# maipad-config: {"launch":"run","filename":"bookclub.maipad.gql"}
+###> CLEAR EXISTING DATABASE STATE
+#{
+# ## Clean slate
+# This block calls the standard cleanup script so your demo always starts from a predictable baseline.
+#
+# stepinto: DB_CLEAR.gql
+#}
+mutation ClearDatabase {
+  DbClearResult: DbExecute(path: "{{UserDataFolder}}/project/scripts/DB_CLEAR.gql") {
+    success
+    message
+  }
+}
+
+###> CREATE BOOK CLUB TABLES
+#{
+# ## Create schema
+# We create readers, authors, books, and reviews.
+#
+# mAIcro auto-generates GraphQL CRUD operations for each table after `DbReload`.
+#}
+mutation CreateBookClubTables {
+  readers: DbCreateTable(
+    name: "readers"
+    icon: "person-badge"
+    description: "Members of the book club"
+    fields: [
+      { name: "username", type: String, is_required: true, description: "Unique username" }
+      { name: "name", type: String, is_required: true, description: "Display name" }
+      { name: "email", type: String, is_sensitive: true, description: "Contact email" }
+      { name: "membership_level", type: String, is_required: true, description: "standard or premium" }
+    ]
+  )
+
+  authors: DbCreateTable(
+    name: "authors"
+    icon: "pen"
+    description: "Book authors"
+    fields: [
+      { name: "name", type: String, is_required: true, description: "Author full name" }
+      { name: "bio", type: String, description: "Short biography" }
+      { name: "demography", type: JSON, description: "Nationality, genres and stats" }
+    ]
+  )
+
+  books: DbCreateTable(
+    name: "books"
+    icon: "book"
+    description: "Book catalog"
+    fields: [
+      { name: "title", type: String, is_required: true, description: "Book title" }
+      { name: "genre", type: String, is_required: true, description: "Book genre" }
+      { name: "author_id", type: ID, description: "Reference to author" }
+      { name: "synopsis", type: String, has_vector: true, description: "Summary text for semantic search" }
+      { name: "price", type: Float, description: "Book cover price" }
+    ]
+  )
+
+  reviews: DbCreateTable(
+    name: "reviews"
+    icon: "chat-square-text"
+    description: "Reader reviews of books"
+    fields: [
+      { name: "rating", type: Int, is_required: true, description: "1-5 stars" }
+      { name: "review", type: String, is_required: true, description: "Review body" }
+      { name: "reader_id", type: ID, description: "Reference to reader" }
+      { name: "book_id", type: ID, description: "Reference to book" }
+      { name: "review_date", type: String, description: "ISO date" }
+    ]
+  )
+}
+
+###> RELOAD GRAPHQL SCHEMA
+#{
+# ## Regenerate API
+# After table changes, run `DbReload` so new generated mutations/queries are available immediately.
+#}
+mutation ReloadSchema {
+  DbReload
+}
+
+###> SEED AUTHORS
+mutation SeedAuthors {
+  atwood: authorAdd(data: {
+    name: "Margaret Atwood"
+    bio: "Canadian author known for dystopian and literary fiction."
+    demography: "{\"nationality\":\"Canadian\",\"genres\":[\"dystopian\",\"literary\"]}"
+  }) {
+    data {
+      id
+    }
+  }
+
+  christie: authorAdd(data: {
+    name: "Agatha Christie"
+    bio: "English writer famous for detective novels."
+    demography: "{\"nationality\":\"British\",\"genres\":[\"mystery\",\"crime\"]}"
+  }) {
+    data {
+      id
+    }
+  }
+
+  asimov: authorAdd(data: {
+    name: "Isaac Asimov"
+    bio: "Prolific science fiction author and professor."
+    demography: "{\"nationality\":\"American\",\"genres\":[\"science fiction\"]}"
+  }) {
+    data {
+      id
+    }
+  }
+}
+
+###> SEED READERS
+mutation SeedReaders {
+  alice: readerAdd(data: {
+    username: "alice_reads"
+    name: "Alice Johnson"
+    email: "alice@bookclub.local"
+    membership_level: "premium"
+  }) {
+    data {
+      id
+    }
+  }
+
+  bob: readerAdd(data: {
+    username: "bob_books"
+    name: "Bob Chen"
+    email: "bob@bookclub.local"
+    membership_level: "standard"
+  }) {
+    data {
+      id
+    }
+  }
+
+  carol: readerAdd(data: {
+    username: "carol_pages"
+    name: "Carol Williams"
+    email: "carol@bookclub.local"
+    membership_level: "premium"
+  }) {
+    data {
+      id
+    }
+  }
+}
+
+###> SEED BOOKS
+#{
+# ## Populate the catalog
+# Use DBSETUP-style interpolation so foreign keys work for both Int and UUID IDs.
+# `{{@@.alias.id}}` references the created ID from the `SEED AUTHORS` block.
+#}
+mutation SeedBooks {
+  handmaids: bookAdd(data: {
+    title: "The Handmaid's Tale"
+    genre: "Dystopian"
+    author_id: "{{@@.atwood.id}}"
+    synopsis: "In a theocratic regime, women are stripped of rights and forced into rigid social roles."
+    price: 14.99
+  }) {
+    data {
+      id
+    }
+  }
+
+  orient: bookAdd(data: {
+    title: "Murder on the Orient Express"
+    genre: "Mystery"
+    author_id: "{{@@.christie.id}}"
+    synopsis: "A detective investigates a murder aboard a luxury train trapped in snow."
+    price: 12.5
+  }) {
+    data {
+      id
+    }
+  }
+
+  foundation: bookAdd(data: {
+    title: "Foundation"
+    genre: "Science Fiction"
+    author_id: "{{@@.asimov.id}}"
+    synopsis: "A mathematician predicts civilizational collapse and builds a plan to shorten the dark age."
+    price: 16.0
+  }) {
+    data {
+      id
+    }
+  }
+}
+
+###> SEED REVIEWS
+#{
+# ## Populate reviews
+# Use interpolated reader/book IDs from prior blocks so relations are always valid.
+#}
+mutation SeedReviews {
+  review1: reviewAdd(data: {
+    rating: 5
+    review: "A stunning and chilling classic."
+    reader_id: "{{@@.alice.id}}"
+    book_id: "{{@@.handmaids.id}}"
+    review_date: "2026-02-16"
+  }) { count }
+
+  review2: reviewAdd(data: {
+    rating: 4
+    review: "Brilliant mystery with a perfect ending."
+    reader_id: "{{@@.bob.id}}"
+    book_id: "{{@@.orient.id}}"
+    review_date: "2026-02-16"
+  }) { count }
+
+  review3: reviewAdd(data: {
+    rating: 5
+    review: "Visionary sci-fi that still feels modern."
+    reader_id: "{{@@.carol.id}}"
+    book_id: "{{@@.foundation.id}}"
+    review_date: "2026-02-16"
+  }) { count }
+}
+
+###> VERIFY DATA
+#{
+# ## Check outcomes
+# This query gives you a compact sanity check that the setup worked.
+# It also serves as a starter template for future list queries.
+#}
+query VerifyBookClubSetup {
+  readers(page: { page: 1, items: 10 }, sort: [{ key: "id", asc: true }]) {
+    id
+    username
+    membership_level
+  }
+
+  authors(page: { page: 1, items: 10 }, sort: [{ key: "id", asc: true }]) {
+    id
+    name
+  }
+
+  books(page: { page: 1, items: 10 }, sort: [{ key: "id", asc: true }]) {
+    id
+    title
+    genre
+    author { id }
+  }
+
+  reviews(page: { page: 1, items: 10 }, sort: [{ key: "id", asc: true }]) {
+    id
+    rating
+    reader { id }
+    book { id }
+  }
+}

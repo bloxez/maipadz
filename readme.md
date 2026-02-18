@@ -1,0 +1,1 @@
+# This is the folder for maipad content and is presented by the help system on the maipadz page.

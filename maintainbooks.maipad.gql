@@ -1,0 +1,31 @@
+#!maicro
+#---
+# title: Maintain Books
+# emoji: 🧰
+# description: Open the books maintain-data experience with practical defaults for sorting, pagination, and field visibility.
+# difficulty: beginner
+# estimated_time: 2m
+# tags:
+#   - maipad
+#   - maintain-data
+#   - books
+# intent: ops
+# resources:
+#   - type: docs
+#     url: /help/reference/data-operations/
+#     title: Data Operations
+#   - type: docs
+#     url: /help/reference/database/
+#     title: Database Reference
+#---
+# maipad-config: {launch:"maintain-data", filename:"maintainbooks.maipad.gql", columns:["id","title","genre","author_id","synopsis","price"], sort:[{key:"genre",asc:false}], page:1, items:15, filters:[]}
+query books_maipad {
+  books(page: { page: 1, items: 15 }, sort: [{ key: "genre", asc: false }] ) {
+    id
+    title
+    genre
+    author { id }
+    synopsis
+    price
+  }
+}
