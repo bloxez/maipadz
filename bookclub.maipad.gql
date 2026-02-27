@@ -54,16 +54,6 @@ mutation ClearDatabase {
   DbFullReset
 }
 
-###> RELOAD SCHEMA
-#{
-# ## Rebuild Schema
-# After clearing tables, `DbReload` rebuilds the GraphQL schema. Since all
-# user tables are gone, only system types remain until new tables are created.
-#}
-mutation ReloadSchema {
-  DbReload
-}
-
 ###> CREATE BOOK CLUB TABLES
 #{
 # ## Create schema
